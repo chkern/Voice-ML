@@ -1,0 +1,5 @@
+for f in test/*.wav
+do
+  ./00_predict.sh $f
+  cp smile.log $f.log
+done
