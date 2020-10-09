@@ -3,7 +3,7 @@ library(plyr)
 library(data.table)
 
 ## Change path
-wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_Vignette_<6s"
+wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_Vignette_6s"
 setwd(wdpath)
 
 tbl_full <- data.frame()
@@ -72,4 +72,4 @@ voice_q1_vignette <- voice_q1_vignette %>%
   select(id, contains("_m"), n_preds, e1_class, e2_class, e3_class)
 
 # Save RDS file
-saveRDS(voice_q1_vignette, 'voice_q1_vignette_<6s.rds')
+saveRDS(voice_q1_vignette, 'voice_q1_vignette_6s.rds')
