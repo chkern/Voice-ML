@@ -38,6 +38,30 @@ survey_c <- survey_c %>%
                                normal = "e3_loi2_m",
                                high_interest = "e3_loi3_m"))
 
+survey_c <- survey_c %>%
+  mutate(gender = case_when(gender == 1 ~ "male",
+                            gender == 2 ~ "female",
+                            gender == 3 ~ "diverse"),
+         age = case_when(birthyear == 1 ~ ">70",
+                         birthyear == 2 ~ "66-70",
+                         birthyear == 3 ~ "61-65",
+                         birthyear == 4 ~ "56-60",
+                         birthyear == 5 ~ "51-55",
+                         birthyear == 6 ~ "46-50",
+                         birthyear == 7 ~ "41-45",
+                         birthyear == 8 ~ "36-40",
+                         birthyear == 9 ~ "31-35",
+                         birthyear == 10 ~ "26-30",
+                         birthyear == 11 ~ "21-25",
+                         birthyear == 12 ~ "<20"),
+         edu = case_when(education == 1 ~ "in school",
+                         education == 2 ~ "lower",
+                         education == 3 ~ "lower",
+                         education == 4 ~ "medium",
+                         education == 5 ~ "higher",
+                         education == 6 ~ "higher",
+                         education == 7 ~ "higher"))
+
 survey_c$e1_class <- relevel(survey_c$e1_class, ref = "neutral")
 survey_c$e2_class <- relevel(survey_c$e2_class, ref = "neutral")
 
@@ -64,7 +88,14 @@ survey_c <- survey_c %>%
                                  survey_interest == 4 ~ "neutral",
                                  survey_interest == 5 ~ "neutral",
                                  survey_interest == 6 ~ "not interesting",
-                                 survey_interest >= 7 ~ "not interesting")) %>%
+                                 survey_interest >= 7 ~ "not interesting"),
+         svyinterest2 = case_when(survey_interest == 1 ~ 7,
+                                  survey_interest == 2 ~ 6,
+                                  survey_interest == 3 ~ 5,
+                                  survey_interest == 4 ~ 4,
+                                  survey_interest == 5 ~ 3,
+                                  survey_interest == 6 ~ 2,
+                                  survey_interest == 7 ~ 1)) %>%
   mutate_at(c("feelings1", "feelings2", "svyinterest"), as.factor)
 
 # Description Emotion Predictions
@@ -135,4 +166,6 @@ m4 <- lm(feelings_freude ~ e1_class, data = survey_c)
 m5 <- lm(feelings_traurgkeit ~ e1_class, data = survey_c)
 m6 <- lm(feelings_langeweile ~ e1_class, data = survey_c)
 m7 <- lm(feelings_ueberraschung ~ e1_class, data = survey_c)
-m8 <- lm(survey_interest ~ e1_class, data = survey_c)
+
+m8 <- lm(svyinterest2 ~ e1_class, data = survey_c)
+m9 <- lm(svyinterest2 ~ e1_class + gender + age + edu, data = survey_c)
