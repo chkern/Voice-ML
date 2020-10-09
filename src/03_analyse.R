@@ -7,10 +7,10 @@ wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data"
 setwd(wdpath)
 
 voice <- readRDS("voice_q1_vignette_<6s.rds")
-survey <- load("survey_data_voice_experiment_2020_06_29.RData")
+load("survey_voice_experiment_2020_07_09_updated.RData")
 
 survey_c <-
-  survey %>%
+  data_voice_experiment %>%
   left_join(voice, by = c("tic" = "id")) 
 
 survey_c <- survey_c %>%
@@ -33,6 +33,25 @@ survey_c <- survey_c %>%
                                disinterest = "e3_loi1_m", 
                                normal = "e3_loi2_m",
                                high_interest = "e3_loi3_m"))
+
+survey_c <- survey_c %>%
+  mutate(feelings1 = case_when(feelings_aerger < 4 ~ "anger",
+                               feelings_ekel < 4 ~ "disgust",
+                               feelings_angst < 4 ~ "fear",
+                               feelings_freude < 4 ~ "happiness",
+                               feelings_traurgkeit < 4 ~ "sadness",
+                               feelings_langeweile < 4 ~ "boredom",
+                               feelings_ueberraschung < 4 ~ "surprise",
+                               TRUE ~ "neutral"),
+         feelings2 = case_when(feelings_aerger < 4 ~ "anger",
+                               feelings_ekel < 4 ~ "disgust",
+                               feelings_angst < 4 ~ "fear",
+                               feelings_freude < 4 ~ "happiness",
+                               feelings_traurgkeit < 4 ~ "sadness",
+                               feelings_langeweile < 4 ~ "boredom",
+                               feelings_ueberraschung < 4 ~ "happiness",
+                               TRUE ~ "neutral")) %>%
+  mutate_at(c("feelings1", "feelings2"), as.factor)
 
 # Description Emotion Predictions
 
@@ -58,7 +77,31 @@ survey_c %>%
   geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class)) + 
   theme(legend.title = element_blank())
 
-prop.table(table(survey_c$e1_class, survey_c$e2_class))
-prop.table(table(survey_c$e1_class, survey_c$e3_class))
+table(survey_c$e1_class, survey_c$e2_class)
+table(survey_c$e1_class, survey_c$e3_class)
 
 # Emotion Predictions and Survey Responses
+
+survey_c %>%
+  drop_na(e1_class) %>%
+  ggplot() +
+  geom_mosaic(aes(x = product(e1_class, feelings1), fill = e1_class)) + 
+  theme(legend.title = element_blank())
+
+survey_c %>%
+  drop_na(e1_class) %>%
+  ggplot() +
+  geom_mosaic(aes(x = product(e2_class, feelings1), fill = e2_class)) + 
+  theme(legend.title = element_blank())
+
+survey_c %>%
+  drop_na(e1_class) %>%
+  ggplot() +
+  geom_mosaic(aes(x = product(e3_class, feelings1), fill = feelings1)) + 
+  theme(legend.title = element_blank())
+
+confusionMatrix(survey_c$e1_class, reference = survey_c$feelings2)
+
+table(survey_c$e1_class, survey_c$feelings1)
+table(survey_c$e2_class, survey_c$feelings1)
+table(survey_c$e3_class, survey_c$feelings1)
