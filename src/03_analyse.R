@@ -106,10 +106,34 @@ survey_c %>%
   ggplot() +
   geom_bar(aes(x = e1_class))
 
+tab1 <- survey_c %>% filter(n_preds >= 1) %>% count(e1_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+tab2 <- survey_c %>% filter(n_preds >= 2) %>% count(e1_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+
+tab <- bind_cols(tab1, tab2[, 2:3]) %>% mutate(prop...3 = round(prop...3, 3),
+                                               prop...5 = round(prop...5, 3))
+
+stargazer(tab, summary = F, out = "emo_t1.tex")
+
 survey_c %>%
   drop_na(e2_class) %>%
   ggplot() +
   geom_bar(aes(x = e2_class))
+
+tab1 <- survey_c %>% filter(n_preds >= 1) %>% count(e2_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+tab2 <- survey_c %>% filter(n_preds >= 2) %>% count(e2_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+
+tab <- bind_cols(tab1, tab2[, 2:3]) %>% mutate(prop...3 = round(prop...3, 3),
+                                               prop...5 = round(prop...5, 3))
+
+stargazer(tab, summary = F, out = "emo_t2.tex")
+
+tab1 <- survey_c %>% filter(n_preds >= 1) %>% count(e3_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+tab2 <- survey_c %>% filter(n_preds >= 2) %>% count(e3_class) %>% mutate(prop = prop.table(n)) %>% arrange(desc(prop))
+
+tab <- bind_cols(tab1, tab2[, 2:3]) %>% mutate(prop...3 = round(prop...3, 3),
+                                               prop...5 = round(prop...5, 3))
+
+stargazer(tab, summary = F, out = "emo_t3.tex")
 
 p <- survey_c %>%
   drop_na(e1_class) %>%
