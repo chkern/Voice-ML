@@ -1,6 +1,7 @@
 library(tidyverse)
 library(ggmosaic)
 library(caret)
+library(stargazer)
 
 ## Change path
 wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data"
@@ -62,8 +63,8 @@ survey_c <- survey_c %>%
                          education == 6 ~ "higher",
                          education == 7 ~ "higher"))
 
-survey_c$e1_class <- relevel(survey_c$e1_class, ref = "neutral")
-survey_c$e2_class <- relevel(survey_c$e2_class, ref = "neutral")
+survey_c$e1_class <- relevel(survey_c$e1_class, ref = "boredom")
+survey_c$e2_class <- relevel(survey_c$e2_class, ref = "tired")
 
 survey_c <- survey_c %>%
   mutate(feelings1 = case_when(feelings_aerger < 4 ~ "anger",
@@ -82,21 +83,21 @@ survey_c <- survey_c %>%
                                feelings_langeweile < 4 ~ "boredom",
                                feelings_ueberraschung < 4 ~ "happiness",
                                TRUE ~ "neutral"),
-         svyinterest = case_when(survey_interest == 1 ~ "interesting",
-                                 survey_interest == 2 ~ "interesting",
-                                 survey_interest == 3 ~ "neutral",
-                                 survey_interest == 4 ~ "neutral",
-                                 survey_interest == 5 ~ "neutral",
-                                 survey_interest == 6 ~ "not interesting",
-                                 survey_interest >= 7 ~ "not interesting"),
-         svyinterest2 = case_when(survey_interest == 1 ~ 7,
-                                  survey_interest == 2 ~ 6,
-                                  survey_interest == 3 ~ 5,
-                                  survey_interest == 4 ~ 4,
-                                  survey_interest == 5 ~ 3,
-                                  survey_interest == 6 ~ 2,
-                                  survey_interest == 7 ~ 1)) %>%
-  mutate_at(c("feelings1", "feelings2", "svyinterest"), as.factor)
+         svyinterest = case_when(survey_interest == 1 ~ 7,
+                                 survey_interest == 2 ~ 6,
+                                 survey_interest == 3 ~ 5,
+                                 survey_interest == 4 ~ 4,
+                                 survey_interest == 5 ~ 3,
+                                 survey_interest == 6 ~ 2,
+                                 survey_interest == 7 ~ 1),
+         svydifficult = case_when(survey_difficulty == 1 ~ 7,
+                                  survey_difficulty == 2 ~ 6,
+                                  survey_difficulty == 3 ~ 5,
+                                  survey_difficulty == 4 ~ 4,
+                                  survey_difficulty == 5 ~ 3,
+                                  survey_difficulty == 6 ~ 2,
+                                  survey_difficulty == 7 ~ 1)) %>%
+  mutate_at(c("feelings1", "feelings2"), as.factor)
 
 # Description Emotion Predictions
 
@@ -110,52 +111,96 @@ survey_c %>%
   ggplot() +
   geom_bar(aes(x = e2_class))
 
-survey_c %>%
+p <- survey_c %>%
   drop_na(e1_class) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, e2_class), fill = e1_class)) + 
-  theme(legend.title = element_blank())
+  labs(x = "Predicted Emotions (abcAffect)", y = "Predicted Emotions (emodb)") +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   vjust = 1))
 
-survey_c %>%
+temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
+p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
+
+ggsave("emo1-1.pdf", width = 9, height = 7)
+
+p <- survey_c %>%
   drop_na(e1_class) %>%
   ggplot() +
-  geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class)) + 
-  theme(legend.title = element_blank())
+  geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class))  + 
+  labs(x = "Predicted Interest (avic)", y = "Predicted Emotions (emodb)") +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   vjust = 1))
+
+temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
+p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
+
+ggsave("emo1-2.pdf", width = 9, height = 7)
 
 table(survey_c$e1_class, survey_c$e2_class)
 table(survey_c$e1_class, survey_c$e3_class)
 
 # Emotion Predictions and Survey Responses
 
-survey_c %>%
+p <- survey_c %>%
   drop_na(e1_class) %>%
+ # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, feelings1), fill = e1_class)) + 
-  theme(legend.title = element_blank())
+  labs(x = "Feelings (Survey)", y = "Predicted Emotions (emodb)") +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   vjust = 1))
 
-survey_c %>%
-  drop_na(e1_class) %>%
+temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
+p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
+
+ggsave("emo2-1.pdf", width = 9, height = 7)
+
+p <- survey_c %>%
+  drop_na(e2_class) %>%
+ # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e2_class, feelings1), fill = e2_class)) + 
-  theme(legend.title = element_blank())
+  labs(x = "Feelings (Survey)", y = "Predicted Emotions (abcAffect)") +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   vjust = 1))
 
-survey_c %>%
-  drop_na(e1_class) %>%
-  ggplot() +
-  geom_mosaic(aes(x = product(e3_class, feelings1), fill = feelings1)) + 
-  theme(legend.title = element_blank())
+temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
+p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-survey_c %>%
-  drop_na(e1_class) %>%
+ggsave("emo2-2.pdf", width = 9, height = 7)
+
+p <- survey_c %>%
+  drop_na(e3_class) %>%
+ # filter(n_preds >= 2) %>%
   ggplot() +
-  geom_mosaic(aes(x = product(e3_class, svyinterest), fill = svyinterest)) + 
-  theme(legend.title = element_blank())
+  geom_mosaic(aes(x = product(e3_class, feelings1), fill = e3_class))  + 
+  labs(x = "Feelings (Survey)", y = "Predicted Interest (avic)") +
+  theme(legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   vjust = 1))
+
+temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
+p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
+
+ggsave("emo2-3.pdf", width = 9, height = 7)
 
 confusionMatrix(survey_c$e1_class, reference = survey_c$feelings2)
 
 table(survey_c$e1_class, survey_c$feelings1)
 table(survey_c$e2_class, survey_c$feelings1)
 table(survey_c$e3_class, survey_c$feelings1)
+
+cor(survey_c[, c(10:16, 27:33)], use = "pairwise.complete.obs")
 
 # Models
 
@@ -167,5 +212,22 @@ m5 <- lm(feelings_traurgkeit ~ e1_class, data = survey_c)
 m6 <- lm(feelings_langeweile ~ e1_class, data = survey_c)
 m7 <- lm(feelings_ueberraschung ~ e1_class, data = survey_c)
 
-m8 <- lm(svyinterest2 ~ e1_class, data = survey_c)
-m9 <- lm(svyinterest2 ~ e1_class + gender + age + edu, data = survey_c)
+m8 <- lm(svyinterest ~ e1_class, data = survey_c)
+m9 <- lm(svyinterest ~ e1_class + gender + age + edu, data = survey_c)
+
+stargazer(m8, m9, 
+          keep = c("Constant", "e1_classneutral", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classsadness"), 
+          report = ('vcsp'), 
+          add.lines = list(c("Demographic controls", "", "Yes")), 
+          omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
+          out = "emo_m1.tex")
+
+m10 <- lm(svydifficult ~ e1_class, data = survey_c)
+m11 <- lm(svydifficult ~ e1_class + gender + age + edu, data = survey_c)
+
+stargazer(m10, m11, 
+          keep = c("Constant", "e1_classneutral", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classsadness"), 
+          report = ('vcsp'), 
+          add.lines = list(c("Demographic controls", "", "Yes")), 
+          omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
+          out = "emo_m2.tex")
