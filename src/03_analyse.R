@@ -1,4 +1,5 @@
 library(tidyverse)
+require(stringr)
 library(ggmosaic)
 library(caret)
 library(stargazer)
@@ -9,9 +10,11 @@ setwd(wdpath)
 
 voice1 <- readRDS("voice_q1_vignette_6s.rds")
 voice2 <- readRDS("voice_q1_vignette_6s-15s.rds")
+voice3 <- readRDS("voice_q1_vignette_15s-60s.rds")
+voice4 <- readRDS("voice_q1_vignette_60s.rds")
 load("survey_voice_experiment_2020_07_09_updated.RData")
 
-voice <- rbind(voice1, voice2)
+voice <- rbind(voice1, voice2, voice3, voice4)
 
 survey_c <-
   data_voice_experiment %>%
@@ -61,7 +64,8 @@ survey_c <- survey_c %>%
                          education == 4 ~ "medium",
                          education == 5 ~ "higher",
                          education == 6 ~ "higher",
-                         education == 7 ~ "higher"))
+                         education == 7 ~ "higher"),
+         n_words = str_count(transcript_vignette, '\\w+'))
 
 survey_c$e1_class <- relevel(survey_c$e1_class, ref = "boredom")
 survey_c$e2_class <- relevel(survey_c$e2_class, ref = "tired")
@@ -139,7 +143,7 @@ p <- survey_c %>%
   drop_na(e1_class) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, e2_class), fill = e1_class)) + 
-  labs(x = "Predicted Emotions (abcAffect)", y = "Predicted Emotions (emodb)") +
+  labs(x = "Predicted Emotions (ABC)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -154,7 +158,7 @@ p <- survey_c %>%
   drop_na(e1_class) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class))  + 
-  labs(x = "Predicted Interest (avic)", y = "Predicted Emotions (emodb)") +
+  labs(x = "Predicted Interest (AVIC)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -175,7 +179,7 @@ p <- survey_c %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, feelings1), fill = e1_class)) + 
-  labs(x = "Feelings (Survey)", y = "Predicted Emotions (emodb)") +
+  labs(x = "Feelings (Survey)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -191,7 +195,7 @@ p <- survey_c %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e2_class, feelings1), fill = e2_class)) + 
-  labs(x = "Feelings (Survey)", y = "Predicted Emotions (abcAffect)") +
+  labs(x = "Feelings (Survey)", y = "Predicted Emotions (ABC)") +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -207,7 +211,7 @@ p <- survey_c %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e3_class, feelings1), fill = e3_class))  + 
-  labs(x = "Feelings (Survey)", y = "Predicted Interest (avic)") +
+  labs(x = "Feelings (Survey)", y = "Predicted Interest (AVIC)") +
   theme(legend.title = element_blank(),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -240,7 +244,7 @@ m8 <- lm(svyinterest ~ e1_class, data = survey_c)
 m9 <- lm(svyinterest ~ e1_class + gender + age + edu, data = survey_c)
 
 stargazer(m8, m9, 
-          keep = c("Constant", "e1_classneutral", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classsadness"), 
+          keep = c("Constant", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classneutral", "e1_classsadness"), 
           report = ('vcsp'), 
           add.lines = list(c("Demographic controls", "", "Yes")), 
           omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
@@ -250,8 +254,28 @@ m10 <- lm(svydifficult ~ e1_class, data = survey_c)
 m11 <- lm(svydifficult ~ e1_class + gender + age + edu, data = survey_c)
 
 stargazer(m10, m11, 
-          keep = c("Constant", "e1_classneutral", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classsadness"), 
+          keep = c("Constant", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classneutral", "e1_classsadness"), 
           report = ('vcsp'), 
           add.lines = list(c("Demographic controls", "", "Yes")), 
           omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
           out = "emo_m2.tex")
+
+m12 <- lm(n_words ~ e1_class, data = survey_c)
+m13 <- lm(n_words ~ e1_class + gender + age + edu, data = survey_c)
+
+stargazer(m12, m13, 
+          keep = c("Constant", "e1_classanger", "e1_classdisgust", "e1_classfear", "e1_classhappiness", "e1_classneutral", "e1_classsadness"), 
+          report = ('vcsp'), 
+          add.lines = list(c("Demographic controls", "", "Yes")), 
+          omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
+          out = "emo_m3.tex")
+
+m14 <- lm(n_words ~ e2_class, data = survey_c)
+m15 <- lm(n_words ~ e2_class + gender + age + edu, data = survey_c)
+
+stargazer(m14, m15, 
+          keep = c("Constant", "e2_classagressiv", "e2_classcheerful", "e2_classintoxicated", "e2_classnervous", "e2_classneutral"), 
+          report = ('vcsp'), 
+          add.lines = list(c("Demographic controls", "", "Yes")), 
+          omit.stat = c("adj.rsq", "ser"), omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, 
+          out = "emo_m4.tex")
