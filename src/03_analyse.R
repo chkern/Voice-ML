@@ -103,6 +103,8 @@ survey_c <- survey_c %>%
                                   survey_difficulty == 7 ~ 1)) %>%
   mutate_at(c("feelings1", "feelings2"), as.factor)
 
+saveRDS(survey_c, 'survey_voice_combined.rds')
+
 # Description Emotion Predictions
 
 survey_c %>%
@@ -145,6 +147,7 @@ p <- survey_c %>%
   geom_mosaic(aes(x = product(e1_class, e2_class), fill = e1_class)) + 
   labs(x = "Predicted Emotions (ABC)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
+        text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -152,7 +155,7 @@ p <- survey_c %>%
 temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
 p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-ggsave("emo1-1.pdf", width = 9, height = 7)
+ggsave("emo1-1.pdf", width = 9, height = 6)
 
 p <- survey_c %>%
   drop_na(e1_class) %>%
@@ -160,6 +163,7 @@ p <- survey_c %>%
   geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class))  + 
   labs(x = "Predicted Interest (AVIC)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
+        text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -167,7 +171,7 @@ p <- survey_c %>%
 temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
 p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-ggsave("emo1-2.pdf", width = 9, height = 7)
+ggsave("emo1-2.pdf", width = 9, height = 6)
 
 table(survey_c$e1_class, survey_c$e2_class)
 table(survey_c$e1_class, survey_c$e3_class)
@@ -181,6 +185,7 @@ p <- survey_c %>%
   geom_mosaic(aes(x = product(e1_class, feelings1), fill = e1_class)) + 
   labs(x = "Feelings (Survey)", y = "Predicted Emotions (Emo-DB)") +
   theme(legend.title = element_blank(),
+        text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -188,7 +193,7 @@ p <- survey_c %>%
 temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
 p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-ggsave("emo2-1.pdf", width = 9, height = 7)
+ggsave("emo2-1.pdf", width = 9, height = 6)
 
 p <- survey_c %>%
   drop_na(e2_class) %>%
@@ -197,6 +202,7 @@ p <- survey_c %>%
   geom_mosaic(aes(x = product(e2_class, feelings1), fill = e2_class)) + 
   labs(x = "Feelings (Survey)", y = "Predicted Emotions (ABC)") +
   theme(legend.title = element_blank(),
+        text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -204,7 +210,7 @@ p <- survey_c %>%
 temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
 p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-ggsave("emo2-2.pdf", width = 9, height = 7)
+ggsave("emo2-2.pdf", width = 9, height = 6)
 
 p <- survey_c %>%
   drop_na(e3_class) %>%
@@ -213,6 +219,7 @@ p <- survey_c %>%
   geom_mosaic(aes(x = product(e3_class, feelings1), fill = e3_class))  + 
   labs(x = "Feelings (Survey)", y = "Predicted Interest (AVIC)") +
   theme(legend.title = element_blank(),
+        text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -220,7 +227,7 @@ p <- survey_c %>%
 temp <- ggplot_build(p)$data[[1]] %>% mutate(wt = ifelse(.wt < 5, NA, .wt))
 p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 
-ggsave("emo2-3.pdf", width = 9, height = 7)
+ggsave("emo2-3.pdf", width = 9, height = 6)
 
 confusionMatrix(survey_c$e1_class, reference = survey_c$feelings2)
 
