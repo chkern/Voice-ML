@@ -1,5 +1,5 @@
 library(tidyverse)
-require(stringr)
+library(stringr)
 library(ggmosaic)
 library(caret)
 library(stargazer)
@@ -40,7 +40,8 @@ survey_c <- survey_c %>%
          e3_class = fct_recode(e3_class, 
                                disinterest = "e3_loi1_m", 
                                normal = "e3_loi2_m",
-                               high_interest = "e3_loi3_m"))
+                               high_interest = "e3_loi3_m"),
+         no_voice = ifelse(is.na(e1_class), 1, 0))
 
 survey_c <- survey_c %>%
   mutate(gender = case_when(gender == 1 ~ "male",
@@ -104,6 +105,22 @@ survey_c <- survey_c %>%
   mutate_at(c("feelings1", "feelings2"), as.factor)
 
 saveRDS(survey_c, 'survey_voice_combined.rds')
+
+# Sample
+
+x1 <- survey_c %>% group_by(no_voice) %>% drop_na(age) %>% summarise(m_age = median(birthyear)) 
+x2 <- survey_c %>% group_by(no_voice) %>% drop_na(edu) %>% count(edu) %>% mutate(prop = prop.table(n))
+x3 <- survey_c %>% group_by(no_voice) %>% drop_na(gender) %>% count(gender) %>% mutate(prop = prop.table(n))
+
+x1w <- x1 %>% pivot_wider(names_from = no_voice, values_from = m_age) %>% mutate(var = "age")
+x2w <- x2 %>% select(no_voice, edu, prop) %>% pivot_wider(names_from = no_voice, values_from = prop) %>% rename(var = edu)
+x3w <- x3 %>% select(no_voice, gender, prop) %>% pivot_wider(names_from = no_voice, values_from = prop) %>% rename(var = gender)
+
+xtab <- bind_rows(x1w, x2w, x3w) %>% select(var, '0', '1')
+stargazer(xtab, summary = F, out = "demo.tex")
+
+survey_c %>% count(no_voice) %>% mutate(prop = prop.table(n))
+survey_c %>% summarise(mean_w = mean(n_words, na.rm = T), min_w = min(n_words, na.rm = T), max_w = max(n_words, na.rm = T)) 
 
 # Description Emotion Predictions
 
