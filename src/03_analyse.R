@@ -23,20 +23,20 @@ survey_c <-
 survey_c <- survey_c %>%
   mutate_at(c("e1_class", "e2_class", "e3_class"), as.factor) %>%
   mutate(e1_class = fct_recode(e1_class, 
-                               neutral = "e1_neutral_m",
-                               anger = "e1_anger_m", 
-                               boredom = "e1_boredom_m",
-                               disgust = "e1_disgust_m",
-                               fear = "e1_fear_m",
-                               happiness = "e1_happiness_m",
-                               sadness = "e1_sadness_m"),
+                               Neutral = "e1_neutral_m",
+                               Anger = "e1_anger_m", 
+                               Boredom = "e1_boredom_m",
+                               Disgust = "e1_disgust_m",
+                               Fear = "e1_fear_m",
+                               Happiness = "e1_happiness_m",
+                               Sadness = "e1_sadness_m"),
          e2_class = fct_recode(e2_class, 
-                               neutral = "e2_neutral_m",
-                               agressiv = "e2_agressiv_m", 
-                               cheerful = "e2_cheerful_m",
-                               intoxicated = "e2_intoxicated_m",
-                               nervous = "e2_nervous_m",
-                               tired = "e2_tired_m"),
+                               Neutral = "e2_neutral_m",
+                               Agressive = "e2_agressiv_m", 
+                               Cheerful = "e2_cheerful_m",
+                               Intoxicated = "e2_intoxicated_m",
+                               Nervous = "e2_nervous_m",
+                               Tired = "e2_tired_m"),
          e3_class = fct_recode(e3_class, 
                                disinterest = "e3_loi1_m", 
                                normal = "e3_loi2_m",
@@ -68,26 +68,34 @@ survey_c <- survey_c %>%
                          education == 7 ~ "higher"),
          n_words = str_count(transcript_vignette, '\\w+'))
 
-survey_c$e1_class <- relevel(survey_c$e1_class, ref = "boredom")
-survey_c$e2_class <- relevel(survey_c$e2_class, ref = "tired")
+survey_c$e1_class <- relevel(survey_c$e1_class, ref = "Boredom")
+survey_c$e2_class <- relevel(survey_c$e2_class, ref = "Tired")
 
 survey_c <- survey_c %>%
-  mutate(feelings1 = case_when(feelings_aerger < 4 ~ "anger",
-                               feelings_ekel < 4 ~ "disgust",
-                               feelings_angst < 4 ~ "fear",
-                               feelings_freude < 4 ~ "happiness",
-                               feelings_traurgkeit < 4 ~ "sadness",
-                               feelings_langeweile < 4 ~ "boredom",
-                               feelings_ueberraschung < 4 ~ "surprise",
-                               TRUE ~ "neutral"),
-         feelings2 = case_when(feelings_aerger < 4 ~ "anger",
-                               feelings_ekel < 4 ~ "disgust",
-                               feelings_angst < 4 ~ "fear",
-                               feelings_freude < 4 ~ "happiness",
-                               feelings_traurgkeit < 4 ~ "sadness",
-                               feelings_langeweile < 4 ~ "boredom",
-                               feelings_ueberraschung < 4 ~ "happiness",
-                               TRUE ~ "neutral"),
+  mutate(feelings1 = case_when(feelings_aerger < 4 ~ "Anger",
+                               feelings_ekel < 4 ~ "Disgust",
+                               feelings_angst < 4 ~ "Fear",
+                               feelings_freude < 4 ~ "Happiness",
+                               feelings_traurgkeit < 4 ~ "Sadness",
+                               feelings_langeweile < 4 ~ "Boredom",
+                               feelings_ueberraschung < 4 ~ "Surprise",
+                               TRUE ~ "Neutral"),
+         feelings1 = ifelse(is.na(feelings_aerger) & is.na(feelings_ekel) &
+                            is.na(feelings_angst) & is.na(feelings_freude) &
+                            is.na(feelings_traurgkeit) & is.na(feelings_langeweile) &
+                            is.na(feelings_ueberraschung), NA, feelings1),
+         feelings2 = case_when(feelings_aerger < 4 ~ "Anger",
+                               feelings_ekel < 4 ~ "Disgust",
+                               feelings_angst < 4 ~ "Fear",
+                               feelings_freude < 4 ~ "Happiness",
+                               feelings_traurgkeit < 4 ~ "Sadness",
+                               feelings_langeweile < 4 ~ "Boredom",
+                               feelings_ueberraschung < 4 ~ "Happiness",
+                               TRUE ~ "Neutral"),
+         feelings2 = ifelse(is.na(feelings_aerger) & is.na(feelings_ekel) &
+                            is.na(feelings_angst) & is.na(feelings_freude) &
+                            is.na(feelings_traurgkeit) & is.na(feelings_langeweile) &
+                            is.na(feelings_ueberraschung), NA, feelings2),
          svyinterest = case_when(survey_interest == 1 ~ 7,
                                  survey_interest == 2 ~ 6,
                                  survey_interest == 3 ~ 5,
@@ -163,8 +171,8 @@ p <- survey_c %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, e2_class), fill = e1_class)) + 
   labs(x = "Predicted Emotions (ABC)", y = "Predicted Emotions (Emo-DB)") +
-  theme(legend.title = element_blank(),
-        text = element_text(size = 11.5),
+  scale_fill_discrete("Emo-DB") +
+  theme(text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -179,8 +187,8 @@ p <- survey_c %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, e3_class), fill = e1_class))  + 
   labs(x = "Predicted Interest (AVIC)", y = "Predicted Emotions (Emo-DB)") +
-  theme(legend.title = element_blank(),
-        text = element_text(size = 11.5),
+  scale_fill_discrete("Emo-DB") +
+  theme(text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -196,13 +204,13 @@ table(survey_c$e1_class, survey_c$e3_class)
 # Emotion Predictions and Survey Responses
 
 p <- survey_c %>%
-  drop_na(e1_class) %>%
+  drop_na(e1_class, feelings1) %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e1_class, feelings1), fill = e1_class)) + 
   labs(x = "Feelings (Survey)", y = "Predicted Emotions (Emo-DB)") +
-  theme(legend.title = element_blank(),
-        text = element_text(size = 11.5),
+  scale_fill_discrete("Emo-DB") +
+  theme(text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -213,13 +221,13 @@ p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 ggsave("emo2-1.pdf", width = 9, height = 6)
 
 p <- survey_c %>%
-  drop_na(e2_class) %>%
+  drop_na(e2_class, feelings1) %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e2_class, feelings1), fill = e2_class)) + 
   labs(x = "Feelings (Survey)", y = "Predicted Emotions (ABC)") +
-  theme(legend.title = element_blank(),
-        text = element_text(size = 11.5),
+  scale_fill_discrete("ABC") +
+  theme(text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
@@ -230,13 +238,13 @@ p + geom_text(data = temp, aes(x = (xmin+xmax)/2, y = (ymin+ymax)/2, label=wt))
 ggsave("emo2-2.pdf", width = 9, height = 6)
 
 p <- survey_c %>%
-  drop_na(e3_class) %>%
+  drop_na(e3_class, feelings1) %>%
  # filter(n_preds >= 2) %>%
   ggplot() +
   geom_mosaic(aes(x = product(e3_class, feelings1), fill = e3_class))  + 
   labs(x = "Feelings (Survey)", y = "Predicted Interest (AVIC)") +
-  theme(legend.title = element_blank(),
-        text = element_text(size = 11.5),
+  scale_fill_discrete("AVIC") +
+  theme(text = element_text(size = 11.5),
         axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    vjust = 1))
