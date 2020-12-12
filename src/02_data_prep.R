@@ -3,18 +3,19 @@ library(plyr)
 library(data.table)
 
 ## Change path
-wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_Vignette_6s"
+wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_1_SPD_15s+"
 setwd(wdpath)
 
 tbl_full <- data.frame()
 files <- list.files(pattern = "*wav.log")
+drop <- "QA_1_SPD_"
 
 for(i in 1:length(files)){
    temp <- read_delim(files[i], delim = " ")     # Read log file
    if (nrow(temp) > 25) {                        # Check if log is empty
      temp <- temp[temp[, 2] == "class", c(3, 5)] # Clean up
      t_temp <- transpose(temp[,2])
-     id <- gsub("QA_Vignette_", "", files[i])    # Get and clean ID from file
+     id <- gsub(drop, "", files[i])    # Get and clean ID from file
      id <- gsub(".wav.log", "", id)
      t_temp$id <- id
      } else {t_temp <- data.frame()}
@@ -37,11 +38,11 @@ tbl_full <- select(tbl_full, id, everything())
 names(tbl_full) <- cols
 
 # Number of predictions over time
-voice_q1_vignette <- tbl_full %>% 
+tbl_clean <- tbl_full %>% 
   mutate(n_preds = (rowSums(!is.na(.)) - 1)/ n_classes)
 
 # Aggregate probabilities for classes over time
-voice_q1_vignette <- voice_q1_vignette %>% 
+tbl_clean <- tbl_clean %>% 
   mutate_at(vars(-id), as.numeric) %>% 
   mutate(e1_anger_m = rowMeans(select(., contains("e1_anger")), na.rm = T)) %>%
   mutate(e1_boredom_m = rowMeans(select(., contains("e1_boredom")), na.rm = T)) %>%
@@ -60,16 +61,23 @@ voice_q1_vignette <- voice_q1_vignette %>%
   mutate(e3_loi2_m = rowMeans(select(., contains("e3_loi2")), na.rm = T)) %>%
   mutate(e3_loi3_m = rowMeans(select(., contains("e3_loi3")), na.rm = T))
 
-# Assign classes based on highest mean probability
-e1_class <- colnames(voice_q1_vignette[,163:169])[max.col(voice_q1_vignette[,163:169], ties.method="first")]
-e2_class <- colnames(voice_q1_vignette[,170:175])[max.col(voice_q1_vignette[,170:175], ties.method="first")]
-e3_class <- colnames(voice_q1_vignette[,176:178])[max.col(voice_q1_vignette[,176:178], ties.method="first")]
+e1_f <- ncol(tbl_clean) - 15
+e1_l <- ncol(tbl_clean) - 9
+e2_f <- ncol(tbl_clean) - 8
+e2_l <- ncol(tbl_clean) - 3
+e3_f <- ncol(tbl_clean) - 2
+e3_l <- ncol(tbl_clean)
 
-voice_q1_vignette <- voice_q1_vignette %>% 
+# Assign classes based on highest mean probability
+e1_class <- colnames(tbl_clean[,e1_f:e1_l])[max.col(tbl_clean[,e1_f:e1_l], ties.method="first")]
+e2_class <- colnames(tbl_clean[,e2_f:e2_l])[max.col(tbl_clean[,e2_f:e2_l], ties.method="first")]
+e3_class <- colnames(tbl_clean[,e3_f:e3_l])[max.col(tbl_clean[,e3_f:e3_l], ties.method="first")]
+
+voice_q1_spd <- tbl_clean %>% 
   mutate(e1_class = e1_class,
          e2_class = e2_class,
          e3_class = e3_class) %>% 
   select(id, contains("_m"), n_preds, e1_class, e2_class, e3_class)
 
 # Save RDS file
-saveRDS(voice_q1_vignette, 'voice_q1_vignette_6s.rds')
+saveRDS(voice_q1_spd, 'voice_q1_spd_16s.rds')
