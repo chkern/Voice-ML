@@ -5,7 +5,7 @@ library(stargazer)
 library(sjPlot)
 library(lme4)
 library(lmerTest)
-library(MuMIn)
+library(mitml)
 
 ###Regression analysis
 
@@ -18,7 +18,7 @@ dataPaper <- survey_c %>%
          partyPreference = relevel(partyPreference, ref = "Others"),
          e3_class = as.factor(e3_class),
          e3_class_m = relevel(e3_class, ref = "normal"),
-         partyPref = ifelse(as.character(dataPaper$party) == as.character(dataPaper$partyPreference), "Yes", "No"))
+         partyPref = ifelse(as.character(party) == as.character(partyPreference), "Yes", "No"))
 
 dataPaper <- dataPaper %>% 
   mutate(minsentiment = min(sentiment, na.rm = T),
@@ -299,30 +299,30 @@ plot_model(m_lengthWords_loi1, type = "eff", terms = "e3_loi1_m")
 plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
-m_lengthWords_loi <- lm(log1p(NToken) ~ e3_loi3_c + party, data = dataPaper, subset = duration >= 4)
-m_lengthWords_party <- lm(log1p(NToken) ~ e3_loi3_c + party + partyPref, data = dataPaper, subset = duration >= 4)
-m_lengthWords_senti <- lm(log1p(NToken) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
-m_lengthWords_controls <- lm(log1p(NToken) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + age + female + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
+m_lengthWords_loi <- lm(log1p(NToken) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
+m_lengthWords_senti <- lm(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
+m_lengthWords_party <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
+m_lengthWords_controls <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
 
 stargazer(m_lengthWords_loi, m_lengthWords_senti, m_lengthWords_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
 # Multilevel models - Words
 ml_lengthWords_loi <- lmer(log1p(NToken) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_loi3_c + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthWords_senti <- lmer(log1p(NToken) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthWords_controls <- lmer(log1p(NToken) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + age + female + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_senti <- lmer(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_controls <- lmer(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 
 multilevelR2(ml_lengthWords_loi)
-multilevelR2(ml_lengthWords_party)
 multilevelR2(ml_lengthWords_senti)
+multilevelR2(ml_lengthWords_party)
 multilevelR2(ml_lengthWords_controls)
 
 class(ml_lengthWords_loi) <- "lmerMod"
-class(ml_lengthWords_party) <- "lmerMod"
 class(ml_lengthWords_senti) <- "lmerMod"
+class(ml_lengthWords_party) <- "lmerMod"
 class(ml_lengthWords_controls) <- "lmerMod"
 
-stargazer(ml_lengthWords_loi, ml_lengthWords_party, ml_lengthWords_senti, ml_lengthWords_controls, report = ('vcsp'),
+stargazer(ml_lengthWords_loi, ml_lengthWords_senti, ml_lengthWords_party, ml_lengthWords_controls, report = ('vcsp'),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthWords4SecLOG.html")
 
 
@@ -336,28 +336,28 @@ plot_model(m_lengthWords_loi1, type = "eff", terms = "e3_loi1_m")
 plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
-m_lengthDuration_loi <- lm(log1p(duration) ~ e3_loi3_c + party, data = dataPaper, subset = duration >= 4)
-m_lengthDuration_party <- lm(log1p(duration) ~ e3_loi3_c + party + partyPref, data = dataPaper, subset = duration >= 4)
-m_lengthDuration_senti <- lm(log1p(duration) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
-m_lengthDuration_controls <- lm(log1p(duration) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + age + female + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_loi <- lm(log1p(duration) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_senti <- lm(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
+m_lengthDuration_party <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_controls <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
 
 stargazer(m_lengthDuration_loi, m_lengthDuration_senti, m_lengthDuration_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
 # Multilevel models - Duration
 ml_lengthDuration_loi <- lmer(log1p(duration) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_loi3_c + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthDuration_senti <- lmer(log1p(duration) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthDuration_controls <- lmer(log1p(duration) ~ e3_loi3_c + party + partyPref + sentiment_norm + I(sentiment_norm^2) + age + female + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_senti <- lmer(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_controls <- lmer(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 
 multilevelR2(ml_lengthDuration_loi)
-multilevelR2(ml_lengthDuration_party)
 multilevelR2(ml_lengthDuration_senti)
+multilevelR2(ml_lengthDuration_party)
 multilevelR2(ml_lengthDuration_controls)
 
 class(ml_lengthDuration_loi) <- "lmerMod"
-class(ml_lengthDuration_party) <- "lmerMod"
 class(ml_lengthDuration_senti) <- "lmerMod"
+class(ml_lengthDuration_party) <- "lmerMod"
 class(ml_lengthDuration_controls) <- "lmerMod"
 
-stargazer(ml_lengthDuration_loi, ml_lengthDuration_party, ml_lengthDuration_senti, ml_lengthDuration_controls, report = ('vcsp'),
+stargazer(ml_lengthDuration_loi, ml_lengthDuration_senti, ml_lengthDuration_party, ml_lengthDuration_controls, report = ('vcsp'),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthDuration4SecLOG.html")
