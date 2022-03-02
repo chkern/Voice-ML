@@ -1,14 +1,15 @@
 library(tidyverse)
 library(plyr)
 library(data.table)
+library(matrixStats)
 
 ## Change path
-wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_1_SPD_15s+"
+wdpath <- "~/Uni/Forschung/Article/2020 - VoiceML/data/Voice QA_3_Greens_15s+"
 setwd(wdpath)
 
 tbl_full <- data.frame()
 files <- list.files(pattern = "*wav.log")
-drop <- "QA_1_SPD_"
+drop <- "QA_3_Greens_"
 
 for(i in 1:length(files)){
    temp <- read_delim(files[i], delim = " ")     # Read log file
@@ -59,25 +60,38 @@ tbl_clean <- tbl_clean %>%
   mutate(e2_tired_m = rowMeans(select(., contains("e2_tired")), na.rm = T)) %>%
   mutate(e3_loi1_m = rowMeans(select(., contains("e3_loi1")), na.rm = T)) %>%
   mutate(e3_loi2_m = rowMeans(select(., contains("e3_loi2")), na.rm = T)) %>%
-  mutate(e3_loi3_m = rowMeans(select(., contains("e3_loi3")), na.rm = T))
-
-e1_f <- ncol(tbl_clean) - 15
-e1_l <- ncol(tbl_clean) - 9
-e2_f <- ncol(tbl_clean) - 8
-e2_l <- ncol(tbl_clean) - 3
-e3_f <- ncol(tbl_clean) - 2
-e3_l <- ncol(tbl_clean)
+  mutate(e3_loi3_m = rowMeans(select(., contains("e3_loi3")), na.rm = T)) %>%
+  mutate(e3_loi1_med = rowMedians(as.matrix(select(., contains("e3_loi1"))), na.rm = T)) %>%
+  mutate(e3_loi2_med = rowMedians(as.matrix(select(., contains("e3_loi2"))), na.rm = T)) %>%
+  mutate(e3_loi3_med = rowMedians(as.matrix(select(., contains("e3_loi3"))), na.rm = T)) %>%
+  mutate(e3_loi1_v = rowVars(as.matrix(select(., contains("e3_loi1"))), na.rm = T)) %>%
+  mutate(e3_loi2_v = rowVars(as.matrix(select(., contains("e3_loi2"))), na.rm = T)) %>%
+  mutate(e3_loi3_v = rowVars(as.matrix(select(., contains("e3_loi3"))), na.rm = T)) %>%
+  mutate(e3_loi1_iqr = rowIQRs(as.matrix(select(., contains("e3_loi1"))), na.rm = T)) %>%
+  mutate(e3_loi2_iqr = rowIQRs(as.matrix(select(., contains("e3_loi2"))), na.rm = T)) %>%
+  mutate(e3_loi3_iqr = rowIQRs(as.matrix(select(., contains("e3_loi3"))), na.rm = T))
+  
+e1_f <- ncol(tbl_clean) - 24
+e1_l <- ncol(tbl_clean) - 18
+e2_f <- ncol(tbl_clean) - 17
+e2_l <- ncol(tbl_clean) - 12
+e3_f <- ncol(tbl_clean) - 11
+e3_l <- ncol(tbl_clean) - 9
+e3_fm <- ncol(tbl_clean) - 8
+e3_lm <- ncol(tbl_clean) - 6
 
 # Assign classes based on highest mean probability
 e1_class <- colnames(tbl_clean[,e1_f:e1_l])[max.col(tbl_clean[,e1_f:e1_l], ties.method="first")]
 e2_class <- colnames(tbl_clean[,e2_f:e2_l])[max.col(tbl_clean[,e2_f:e2_l], ties.method="first")]
 e3_class <- colnames(tbl_clean[,e3_f:e3_l])[max.col(tbl_clean[,e3_f:e3_l], ties.method="first")]
+e3_class_med <- colnames(tbl_clean[,e3_fm:e3_lm])[max.col(tbl_clean[,e3_fm:e3_lm], ties.method="first")]
 
-voice_q1_spd <- tbl_clean %>% 
+voice_q3_greens <- tbl_clean %>% 
   mutate(e1_class = e1_class,
          e2_class = e2_class,
-         e3_class = e3_class) %>% 
-  select(id, contains("_m"), n_preds, e1_class, e2_class, e3_class)
+         e3_class = e3_class,
+         e3_class_med = e3_class_med) %>% 
+  select(id, contains(c("_m", "_v", "_iqr")), n_preds, e1_class, e2_class, e3_class, e3_class_med)
 
 # Save RDS file
-saveRDS(voice_q1_spd, 'voice_q1_spd_16s.rds')
+saveRDS(voice_q3_greens, 'voice_q3_greens_16s.rds')

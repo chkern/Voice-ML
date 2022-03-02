@@ -32,18 +32,18 @@ e3_loi3_05 <- quantile(dataPaper$e3_loi3_m, 0.5, na.rm = T)
 e3_loi2_05 <- quantile(dataPaper$e3_loi2_m, 0.5, na.rm = T)
 
 dataPaper <- dataPaper %>% 
-  mutate(e3_loi3_c = case_when(e3_loi3_m >= e3_loi3_075 ~ "high",
-                               e3_loi3_m < e3_loi3_075 & e3_loi3_m >= e3_loi3_05 ~ "med high",
-                               e3_loi3_m < e3_loi3_05 & e3_loi2_m >= e3_loi2_05 ~ "med low",
-                               e3_loi3_m < e3_loi3_05 & e3_loi2_m < e3_loi2_05 ~ "low"),
-         e3_loi3_c = as.factor(e3_loi3_c),
-         e3_loi3_c = fct_relevel(e3_loi3_c, "low", "med low", "med high", "high"))
+  mutate(e3_loi_c = case_when(e3_loi3_m >= e3_loi3_075 ~ "high",
+                              e3_loi3_m < e3_loi3_075 & e3_loi3_m >= e3_loi3_05 ~ "med high",
+                              e3_loi3_m < e3_loi3_05 & e3_loi2_m >= e3_loi2_05 ~ "med low",
+                              e3_loi3_m < e3_loi3_05 & e3_loi2_m < e3_loi2_05 ~ "low"),
+         e3_loi_c = as.factor(e3_loi_c),
+         e3_loi_c = fct_relevel(e3_loi_c, "low", "med low", "med high", "high"))
 
 dataPaper %>%
   filter(duration >= 4) %>%
-  group_by(e3_class, e3_loi3_c) %>%
+  group_by(e3_class, e3_loi_c) %>%
   tally() %>%
-  spread(e3_loi3_c, n)
+  spread(e3_loi_c, n)
 
 #Distribution of LOI
 m0_distribution_m <- dataPaper %>% 
@@ -55,11 +55,19 @@ m0_distribution_m <- dataPaper %>%
   group_by(party, Count) %>% 
   summarize_at(vars(e3_loi1_m:e3_loi3_m), funs(mean,sd), na.rm = T)
 
-m0_distribution_class <- dataPaper %>% 
+m0_distribution_e3_loi_c <- dataPaper %>% 
   filter(duration >= 4) %>% 
-  dplyr::select(party, e3_loi3_c) %>%
+  dplyr::select(party, e3_loi_c) %>%
   drop_na() %>% 
-  group_by(party, e3_loi3_c) %>% 
+  group_by(party, e3_loi_c) %>% 
+  summarize(Freq = n()) %>%
+  mutate(per = Freq/sum(Freq))
+
+m0_distribution_e3_class <- dataPaper %>% 
+  filter(duration >= 4) %>% 
+  dplyr::select(party, e3_class) %>%
+  drop_na() %>% 
+  group_by(party, e3_class) %>% 
   summarize(Freq = n()) %>%
   mutate(per = Freq/sum(Freq))
 
@@ -88,9 +96,9 @@ meanDurationLengthLog <- dataPaper %>%
   filter(duration >= 4) %>% 
   group_by(party) %>% 
   summarize(duration_mean = mean(log1p(duration), na.rm = T),
-            duration_min = min(log1p(duration), na.rm = T),
+            duration_q05 = quantile(log1p(duration), 0.05, na.rm = T),
             duration_median = median(log1p(duration), na.rm = T),
-            duration_max = max(log1p(duration), na.rm = T),
+            duration_q95 = quantile(log1p(duration), 0.95, na.rm = T),
             duration_sd = sd(log1p(duration), na.rm = T),
             duration_skew = moments::skewness(log1p(duration), na.rm = T))
 
@@ -98,9 +106,9 @@ meanTokenLengthLog <- dataPaper %>%
   filter(duration >= 4) %>% 
   group_by(party) %>% 
   summarize(NToken_mean = mean(log1p(NToken), na.rm = T),
-            NToken_min = min(log1p(NToken), na.rm = T),
+            NToken_q05 = quantile(log1p(NToken), 0.05, na.rm = T),
             NToken_median = median(log1p(NToken), na.rm = T),
-            NToken_max = max(log1p(NToken), na.rm = T),
+            NToken_q95 = quantile(log1p(NToken), 0.95, na.rm = T),
             NToken_sd = sd(log1p(NToken), na.rm = T),
             NToken_skew = moments::skewness(log1p(NToken), na.rm = T))
 
@@ -110,73 +118,98 @@ N_question <- dataPaper %>%
   drop_na(duration) %>% 
   summarize(N = n())
 
-meanDurationLength4sec <- dataPaper %>% 
-  filter(duration >= 4) %>% 
-  summarize(duration_m = mean(duration, na.rm = T),
-            NToken_m = mean(NToken, na.rm = T))
-
-skewnessDurationLength4sec <- dataPaper %>% 
-  filter(duration >= 4) %>% 
-  summarize(duration_skew = moments::skewness(duration, na.rm = T),
-            NToken_skew = moments::skewness(NToken, na.rm = T))
-
-
 # Plot LOI vs Answer Length 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi1_m, log(NToken))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) +
+  labs(y = "log(Words)", x = "Predicted probability: Low Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p1_loi1-words.pdf", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi2_m, log(NToken))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) +
+  labs(y = "log(Words)", x = "Predicted probability: Normal Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p2_loi2-words.pdf", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi3_m, log(NToken))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) + 
+  labs(y = "log(Words)", x = "Predicted probability: High Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p3_loi3-words.pdf", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi1_m, log(duration))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) +
+  labs(y = "log(Duration)", x = "Predicted probability: Low Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p4_loi1-duration.pdf", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi2_m, log(duration))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) +
+  labs(y = "log(Duration)", x = "Predicted probability: Normal Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p5_loi2-duration.pdf", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi3_m, log(duration))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
-  facet_grid(~ party)
+  facet_grid(~ party) +
+  labs(y = "log(Duration)", x = "Predicted probability: High Interest") +
+  theme(panel.spacing.x = unit(4, "mm"),
+        text = element_text(size = 14))
+
+ggsave("p6_loi3-duration.pdf", width = 9, height = 6)
+
+dataPaper %>%
+  filter(duration >= 4) %>%
+  ggplot(aes(e3_loi3_m, sentiment_norm)) +
+  geom_point(size = 1, alpha = 0.25) +
+  geom_smooth() +
+  facet_grid(party ~ partyPreference)
 
 dataPaper %>%
   filter(duration >= 4) %>%
   ggplot(aes(e3_loi3_m, log(NToken))) +
-  geom_point() +
+  geom_point(size = 1, alpha = 0.25) +
   geom_smooth() +
   facet_grid(party ~ partyPref)
 
 dataPaper %>%
   filter(duration >= 4) %>%
-  ggplot(aes(e3_loi3_m, sentiment_norm)) +
-  geom_point() +
-  geom_smooth() +
-  facet_grid(party ~ partyPreference)
+  ggplot() +
+  geom_boxplot(aes(e3_loi3_m, fill = partyPref)) +
+  facet_grid(~ party)
 
 
 # Validity analysis
@@ -233,18 +266,18 @@ plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
 # Regression models
-m_lengthWords_loi <- lm(log1p(NToken) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
+m_lengthWords_loi <- lm(log1p(NToken) ~ e3_loi_c, data = dataPaper, subset = duration >= 4)
 m_lengthWords_senti <- lm(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
-m_lengthWords_party <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
-m_lengthWords_controls <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
+m_lengthWords_party <- lm(log1p(NToken) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
+m_lengthWords_controls <- lm(log1p(NToken) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
 
 stargazer(m_lengthWords_loi, m_lengthWords_senti, m_lengthWords_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
-# Multilevel models - e3_loi3_c
-ml_lengthWords_loi <- lmer(log1p(NToken) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+# Multilevel models - e3_loi_c
+ml_lengthWords_loi <- lmer(log1p(NToken) ~ e3_loi_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthWords_senti <- lmer(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthWords_controls <- lmer(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_controls <- lmer(log1p(NToken) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 
 multilevelR2(ml_lengthWords_loi)
 multilevelR2(ml_lengthWords_senti)
@@ -257,7 +290,7 @@ class(ml_lengthWords_party) <- "lmerMod"
 class(ml_lengthWords_controls) <- "lmerMod"
 
 stargazer(ml_lengthWords_loi, ml_lengthWords_senti, ml_lengthWords_party, ml_lengthWords_controls, report = ('vcsp'),
-          keep = c("Constant", "e3_loi3_cmed low", "e3_loi3_cmed high", "e3_loi3_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
+          keep = c("Constant", "e3_loi_cmed low", "e3_loi_cmed high", "e3_loi_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
           add.lines = list(c("Party preference", "", "", "X", "X"), c("Demographic controls", "", "", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthWords4SecLOG.html")
 
@@ -293,18 +326,18 @@ plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
 # Regression models
-m_lengthDuration_loi <- lm(log1p(duration) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_loi <- lm(log1p(duration) ~ e3_loi_c, data = dataPaper, subset = duration >= 4)
 m_lengthDuration_senti <- lm(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
-m_lengthDuration_party <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
-m_lengthDuration_controls <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_party <- lm(log1p(duration) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
+m_lengthDuration_controls <- lm(log1p(duration) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman, data = dataPaper, subset = duration >= 4)
 
 stargazer(m_lengthDuration_loi, m_lengthDuration_senti, m_lengthDuration_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
-# Multilevel models - e3_loi3_c
-ml_lengthDuration_loi <- lmer(log1p(duration) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+# Multilevel models - e3_loi_c
+ml_lengthDuration_loi <- lmer(log1p(duration) ~ e3_loi_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthDuration_senti <- lmer(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
-ml_lengthDuration_controls <- lmer(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_controls <- lmer(log1p(duration) ~ e3_loi_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 
 multilevelR2(ml_lengthDuration_loi)
 multilevelR2(ml_lengthDuration_senti)
@@ -317,7 +350,7 @@ class(ml_lengthDuration_party) <- "lmerMod"
 class(ml_lengthDuration_controls) <- "lmerMod"
 
 stargazer(ml_lengthDuration_loi, ml_lengthDuration_senti, ml_lengthDuration_party, ml_lengthDuration_controls, report = ('vcsp'),
-          keep = c("Constant", "e3_loi3_cmed low", "e3_loi3_cmed high", "e3_loi3_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
+          keep = c("Constant", "e3_loi_cmed low", "e3_loi_cmed high", "e3_loi_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
           add.lines = list(c("Party preference", "", "", "X", "X"), c("Demographic controls", "", "", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthDuration4SecLOG.html")
 
