@@ -32,12 +32,12 @@ e3_loi3_05 <- quantile(dataPaper$e3_loi3_m, 0.5, na.rm = T)
 e3_loi2_05 <- quantile(dataPaper$e3_loi2_m, 0.5, na.rm = T)
 
 dataPaper <- dataPaper %>% 
-  mutate(e3_loi3_c = case_when(e3_loi3_m >= e3_loi3_075 ~ "very high",
+  mutate(e3_loi3_c = case_when(e3_loi3_m >= e3_loi3_075 ~ "high",
                                e3_loi3_m < e3_loi3_075 & e3_loi3_m >= e3_loi3_05 ~ "med high",
                                e3_loi3_m < e3_loi3_05 & e3_loi2_m >= e3_loi2_05 ~ "med low",
                                e3_loi3_m < e3_loi3_05 & e3_loi2_m < e3_loi2_05 ~ "low"),
          e3_loi3_c = as.factor(e3_loi3_c),
-         e3_loi3_c = relevel(e3_loi3_c, ref = "low"))
+         e3_loi3_c = fct_relevel(e3_loi3_c, "low", "med low", "med high", "high"))
 
 dataPaper %>%
   filter(duration >= 4) %>%
@@ -180,15 +180,6 @@ dataPaper %>%
 
 
 # Validity analysis
-m1_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper)
-
-m2_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party + age + female + education + partyPreference, data = dataPaper)
-
-stargazer(m1_validity, m2_validity, title="Results", align=TRUE, type = "text")
-stargazer(m1_validity, m2_validity, title="Results: Validity", align=TRUE, type = "html", out = "resultsPaper/models_validity.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-
-
-# Validity analysis (>=5)
 m1_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
 
 m2_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party + age + female + education + partyPreference, data = dataPaper, subset = duration >= 5)
@@ -198,65 +189,9 @@ stargazer(m1_validity, m2_validity, title="Results: Validity", align=TRUE, type 
 stargazer(m1_validity, m2_validity, title="Results: Validity", align=TRUE, type = "html", out = "resultsPaper/models_validity5sec_AAPOR.htm", no.space = T, single.row = T, digits = 2, report = "vcp", star.cutoffs = c(.05, .01, .001))
 
 
+### Emotion models
 # Prediction of Answer Length - Words
-m_lengthWords_Emotions <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper)
 
-m_lengthWords_Sentiment <- lm(NToken ~ sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper)
-
-m_lengthWords_Full <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper)
-
-m_lengthWords_Controls <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party + age + female + education, data = dataPaper)
-
-stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results", align=TRUE, type = "text")
-stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results: Length Words", align=TRUE, type = "html", out = "resultsPaper/models_LengthWords.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-plot_model(m_lengthWords_Controls, type = "pred", terms = "sentiment_norm")
-
-
-# Prediction of Answer Length - Duration
-m_lengthDuration_Emotions <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper)
-
-m_lengthDuration_Sentiment <- lm(duration ~ sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper)
-
-m_lengthDuration_Full <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper)
-
-m_lengthDuration_Controls <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party + age + female + education, data = dataPaper)
-
-stargazer(m_lengthDuration_Emotions, m_lengthDuration_Sentiment, m_lengthDuration_Full, m_lengthDuration_Controls, title="Results", align=TRUE, type = "text")
-stargazer(m_lengthDuration_Emotions, m_lengthDuration_Sentiment, m_lengthDuration_Full, m_lengthDuration_Controls, title="Results: Duration", align=TRUE, type = "html", out = "resultsPaper/models_LengthDuration.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-plot_model(m_lengthDuration_Controls, type = "pred", terms = "sentiment_norm")
-
-
-###Remove short answers (>=5)
-# Prediction of Answer Length - Words
-m_lengthWords_Emotions <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthWords_Sentiment <- lm(NToken ~ sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthWords_Full <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthWords_Controls <- lm(NToken ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party + age + female + education, data = dataPaper, subset = duration >= 5)
-
-stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results", align=TRUE, type = "text")
-stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results: Length Words", align=TRUE, type = "html", out = "resultsPaper/models_LengthWordsRobust5Sec.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-plot_model(m_lengthWords_Controls, type = "pred", terms = "sentiment_norm")
-
-
-# Prediction of Answer Length - Duration
-m_lengthDuration_Emotions <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthDuration_Sentiment <- lm(duration ~ sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthDuration_Full <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper, subset = duration >= 5)
-
-m_lengthDuration_Controls <- lm(duration ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + sentiment_norm + I(sentiment_norm^2) + party + age + female + education, data = dataPaper, subset = duration >= 5)
-
-stargazer(m_lengthDuration_Emotions, m_lengthDuration_Sentiment, m_lengthDuration_Full, m_lengthDuration_Controls, title="Results", align=TRUE, type = "text")
-stargazer(m_lengthDuration_Emotions, m_lengthDuration_Sentiment, m_lengthDuration_Full, m_lengthDuration_Controls, title="Results: Duration", align=TRUE, type = "html", out = "resultsPaper/models_LengthDurationRobust5Sec.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-plot_model(m_lengthDuration_Controls, type = "pred", terms = "sentiment_norm")
-
-
-###Log transformation
-# Prediction of Answer Length - Words
 m_lengthWords_Emotions <- lm(log1p(NToken) ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
 
 m_lengthWords_Sentiment <- lm(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2) + party, data = dataPaper, subset = duration >= 5)
@@ -269,7 +204,6 @@ stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m
 stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results: Length Words", align=TRUE, type = "html", out = "resultsPaper/models_LengthWordsRobust5SecLOG.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
 stargazer(m_lengthWords_Emotions, m_lengthWords_Sentiment, m_lengthWords_Full, m_lengthWords_Controls, title="Results: Length Words", align=TRUE, type = "html", out = "resultsPaper/models_LengthWordsRobust5SecLOG_AAPOR.htm", no.space = T, single.row = T, digits = 2, report = "vcp", star.cutoffs = c(.05, .01, .001))
 plot_model(m_lengthWords_Controls, type = "pred", terms = "sentiment_norm")
-
 
 # Prediction of Answer Length - Duration
 m_lengthDuration_Emotions <- lm(log1p(duration) ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
@@ -286,11 +220,10 @@ stargazer(m_lengthDuration_Emotions, m_lengthDuration_Sentiment, m_lengthDuratio
 plot_model(m_lengthDuration_Controls, type = "pred", terms = "sentiment_norm")
 
 
-############ADD ANALYSIS###########
+### LOI models I
+## Prediction of Answer Length - Words
 
-###Log transformation
-# Prediction of Answer Length - Words
-
+# Non-linear effects
 m_lengthWords_loi1 <- lm(log1p(NToken) ~ e3_loi1_m + I(e3_loi1_m^2), data = dataPaper, subset = duration >= 4)
 m_lengthWords_loi2 <- lm(log1p(NToken) ~ e3_loi2_m + I(e3_loi2_m^2), data = dataPaper, subset = duration >= 4)
 m_lengthWords_loi3 <- lm(log1p(NToken) ~ e3_loi3_m + I(e3_loi3_m^2), data = dataPaper, subset = duration >= 4)
@@ -299,6 +232,7 @@ plot_model(m_lengthWords_loi1, type = "eff", terms = "e3_loi1_m")
 plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
+# Regression models
 m_lengthWords_loi <- lm(log1p(NToken) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
 m_lengthWords_senti <- lm(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
 m_lengthWords_party <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
@@ -306,7 +240,7 @@ m_lengthWords_controls <- lm(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sent
 
 stargazer(m_lengthWords_loi, m_lengthWords_senti, m_lengthWords_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
-# Multilevel models - Words
+# Multilevel models - e3_loi3_c
 ml_lengthWords_loi <- lmer(log1p(NToken) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthWords_senti <- lmer(log1p(NToken) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
@@ -323,11 +257,33 @@ class(ml_lengthWords_party) <- "lmerMod"
 class(ml_lengthWords_controls) <- "lmerMod"
 
 stargazer(ml_lengthWords_loi, ml_lengthWords_senti, ml_lengthWords_party, ml_lengthWords_controls, report = ('vcsp'),
+          keep = c("Constant", "e3_loi3_cmed low", "e3_loi3_cmed high", "e3_loi3_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
+          add.lines = list(c("Party preference", "", "", "X", "X"), c("Demographic controls", "", "", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthWords4SecLOG.html")
 
+# Multilevel models - e3_class
+ml_lengthWords_loi <- lmer(log1p(NToken) ~ e3_class + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_party <- lmer(log1p(NToken) ~ e3_class + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthWords_controls <- lmer(log1p(NToken) ~ e3_class + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 
-# Prediction of Answer Length - Duration
+multilevelR2(ml_lengthWords_loi)
+multilevelR2(ml_lengthWords_party)
+multilevelR2(ml_lengthWords_controls)
 
+class(ml_lengthWords_loi) <- "lmerMod"
+class(ml_lengthWords_party) <- "lmerMod"
+class(ml_lengthWords_controls) <- "lmerMod"
+
+stargazer(ml_lengthWords_loi, ml_lengthWords_party, ml_lengthWords_controls, report = ('vcsp'),
+          keep = c("Constant", "e3_classnormal", "e3_classhigh_interest", "sentiment_norm", "I(sentiment_norm^2)"),
+          add.lines = list(c("Party preference", "", "X", "X"), c("Demographic controls", "", "", "X")),
+          omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthWords4SecLOGclass.html")
+
+
+### LOI models II
+## Prediction of Answer Length - Duration
+
+# Non-linear effects
 m_lengthWords_loi1 <- lm(log1p(duration) ~ e3_loi1_m + I(e3_loi1_m^2), data = dataPaper, subset = duration >= 4)
 m_lengthWords_loi2 <- lm(log1p(duration) ~ e3_loi2_m + I(e3_loi2_m^2), data = dataPaper, subset = duration >= 4)
 m_lengthWords_loi3 <- lm(log1p(duration) ~ e3_loi3_m + I(e3_loi3_m^2), data = dataPaper, subset = duration >= 4)
@@ -336,6 +292,7 @@ plot_model(m_lengthWords_loi1, type = "eff", terms = "e3_loi1_m")
 plot_model(m_lengthWords_loi2, type = "eff", terms = "e3_loi2_m")
 plot_model(m_lengthWords_loi3, type = "eff", terms = "e3_loi3_m")
 
+# Regression models
 m_lengthDuration_loi <- lm(log1p(duration) ~ e3_loi3_c, data = dataPaper, subset = duration >= 4)
 m_lengthDuration_senti <- lm(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2), data = dataPaper, subset = duration >= 4)
 m_lengthDuration_party <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref, data = dataPaper, subset = duration >= 4)
@@ -343,7 +300,7 @@ m_lengthDuration_controls <- lm(log1p(duration) ~ e3_loi3_c + sentiment_norm + I
 
 stargazer(m_lengthDuration_loi, m_lengthDuration_senti, m_lengthDuration_controls, title="Results", align=TRUE, type = "text", report=('vc*p'))
 
-# Multilevel models - Duration
+# Multilevel models - e3_loi3_c
 ml_lengthDuration_loi <- lmer(log1p(duration) ~ e3_loi3_c + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthDuration_senti <- lmer(log1p(duration) ~ sentiment_norm + I(sentiment_norm^2) + (1 | lfdn), data = dataPaper, subset = duration >= 4)
 ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_loi3_c + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
@@ -360,4 +317,25 @@ class(ml_lengthDuration_party) <- "lmerMod"
 class(ml_lengthDuration_controls) <- "lmerMod"
 
 stargazer(ml_lengthDuration_loi, ml_lengthDuration_senti, ml_lengthDuration_party, ml_lengthDuration_controls, report = ('vcsp'),
+          keep = c("Constant", "e3_loi3_cmed low", "e3_loi3_cmed high", "e3_loi3_chigh", "sentiment_norm", "I(sentiment_norm^2)"),
+          add.lines = list(c("Party preference", "", "", "X", "X"), c("Demographic controls", "", "", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthDuration4SecLOG.html")
+
+# Multilevel models - e3_class
+ml_lengthDuration_loi <- lmer(log1p(duration) ~ e3_class + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_party <- lmer(log1p(duration) ~ e3_class + sentiment_norm + I(sentiment_norm^2) + party + partyPref + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+ml_lengthDuration_controls <- lmer(log1p(duration) ~ e3_class + sentiment_norm + I(sentiment_norm^2) + party + partyPref + age + education + motherTongueGerman + (1 | lfdn), data = dataPaper, subset = duration >= 4)
+
+multilevelR2(ml_lengthDuration_loi)
+multilevelR2(ml_lengthDuration_party)
+multilevelR2(ml_lengthDuration_controls)
+
+class(ml_lengthDuration_loi) <- "lmerMod"
+class(ml_lengthDuration_party) <- "lmerMod"
+class(ml_lengthDuration_controls) <- "lmerMod"
+
+stargazer(ml_lengthDuration_loi, ml_lengthDuration_party, ml_lengthDuration_controls, report = ('vcsp'),
+          keep = c("Constant", "e3_classnormal", "e3_classhigh_interest", "sentiment_norm", "I(sentiment_norm^2)"),
+          add.lines = list(c("Party preference", "", "X", "X"), c("Demographic controls", "", "", "X")),
+          omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_LengthDuration4SecLOGclass.html")
+
