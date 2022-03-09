@@ -11,6 +11,7 @@ library(mitml)
 
 glimpse(survey_c)
 
+# Data prep
 dataPaper <- survey_c %>% 
   mutate(party = as.factor(party),
          partyPreference = as.factor(partyPreference),
@@ -44,6 +45,31 @@ dataPaper %>%
   group_by(e3_class, e3_loi_c) %>%
   tally() %>%
   spread(e3_loi_c, n)
+
+#Aggregate on respondent level 
+dataResp <- dataPaper %>%
+  filter(no_voice == 0) %>%
+  group_by(lfdn) %>%
+  summarize(e3_loi1_mm = mean(e3_loi1_m, na.rm = T),
+            e3_loi2_mm = mean(e3_loi2_m, na.rm = T),
+            e3_loi3_mm = mean(e3_loi3_m, na.rm = T),
+            e3_loi1_mv = var(e3_loi1_m, na.rm = T),
+            e3_loi2_mv = var(e3_loi2_m, na.rm = T),
+            e3_loi3_mv = var(e3_loi3_m, na.rm = T),
+            e3_loi_cm = names(which.max(table(e3_loi_c))),
+            e3_class_m = names(which.max(table(e3_class))),
+            e3_loi_cm = as.factor(e3_loi_cm),
+            e3_loi_cm = fct_relevel(e3_loi_cm, "low", "med low", "med high", "high"),
+            e3_class_m = as.factor(e3_class_m),
+            e3_class_m = relevel(e3_class_m, ref = "disinterest"),
+            NToken_m = mean(NToken, na.rm = T),
+            duration_m = mean(duration, na.rm = T),
+            surveyinterest = max(surveyInterest))
+
+dataResp %>%
+  group_by(e3_class_m, e3_loi_cm) %>%
+  tally() %>%
+  spread(e3_loi_cm, n)
 
 #Distribution of LOI
 m0_distribution_m <- dataPaper %>% 
@@ -213,13 +239,25 @@ dataPaper %>%
 
 
 # Validity analysis
-m1_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party, data = dataPaper, subset = duration >= 5)
+m0t_validity <- lm(surveyinterest ~ NToken_m, data = dataResp)
+m0d_validity <- lm(surveyinterest ~ duration_m, data = dataResp)
 
-m2_validity <- lm(sentiment_norm ~ e1_anger_m + e1_boredom_m + e1_disgust_m + e1_fear_m + e1_happiness_m + e1_sadness_m + party + age + female + education + partyPreference, data = dataPaper, subset = duration >= 5)
+m1a_validity <- lm(surveyinterest ~ e3_loi1_mm + I(e3_loi1_mm^2), data = dataResp)
+m1b_validity <- lm(surveyinterest ~ e3_loi1_mm + e3_loi1_mv, data = dataResp)
+m1c_validity <- lm(surveyinterest ~ e3_loi1_mm*e3_loi1_mv, data = dataResp)
+m1d_validity <- lm(surveyinterest ~ e3_loi1_mm + e3_loi1_mv + NToken_m, data = dataResp)
+plot_model(m1c_validity, type = "pred", terms = c("e3_loi1_mm", "e3_loi1_mv"))
 
-stargazer(m1_validity, m2_validity, title="Results", align=TRUE, type = "text", report=('vc*p'))
-stargazer(m1_validity, m2_validity, title="Results: Validity", align=TRUE, type = "html", out = "resultsPaper/models_validity5sec.htm", no.space = T, single.row = T, digits = 2, star.cutoffs = c(.05, .01, .001))
-stargazer(m1_validity, m2_validity, title="Results: Validity", align=TRUE, type = "html", out = "resultsPaper/models_validity5sec_AAPOR.htm", no.space = T, single.row = T, digits = 2, report = "vcp", star.cutoffs = c(.05, .01, .001))
+m2a_validity <- lm(surveyinterest ~ e3_loi3_mm + I(e3_loi3_mm^2), data = dataResp)
+m2b_validity <- lm(surveyinterest ~ e3_loi3_mm + e3_loi3_mv, data = dataResp)
+m2c_validity <- lm(surveyinterest ~ e3_loi3_mm*e3_loi3_mv, data = dataResp)
+m2d_validity <- lm(surveyinterest ~ e3_loi3_mm + e3_loi3_mv + NToken_m, data = dataResp)
+plot_model(m2c_validity, type = "pred", terms = c("e3_loi3_mm", "e3_loi3_mv"))
+
+m3a_validity <- lm(surveyinterest ~ e3_loi_cm, data = dataResp)
+m3b_validity <- lm(surveyinterest ~ e3_loi_cm + NToken_m, data = dataResp)
+m4a_validity <- lm(surveyinterest ~ e3_class_m, data = dataResp)
+m4b_validity <- lm(surveyinterest ~ e3_class_m + NToken_m, data = dataResp)
 
 
 ### Emotion models
