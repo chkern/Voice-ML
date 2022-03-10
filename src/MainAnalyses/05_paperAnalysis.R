@@ -128,8 +128,8 @@ meanTokenLength <- dataPaper %>%
             NToken_q95 = quantile(NToken, 0.95, na.rm = T),
             NToken_sd = sd(NToken, na.rm = T),
             NToken_skew = moments::skewness(NToken, na.rm = T))
-stargazer(as.data.frame(meanDurationLength), summary = FALSE, digits = 2,
-          out = "desc_meanDurationLength.html")
+stargazer(as.data.frame(meanTokenLength), summary = FALSE, digits = 2,
+          out = "desc_meanTokenLength.html")
 
 meanDurationLengthLog <- dataPaper %>% 
   filter(duration >= 2) %>% 
