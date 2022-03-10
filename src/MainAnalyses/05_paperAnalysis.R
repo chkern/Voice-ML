@@ -83,7 +83,8 @@ m0_distribution_m <- dataPaper %>%
   mutate(Count = n()) %>% 
   group_by(party, Count) %>% 
   summarize_at(vars(e3_loi1_m:e3_loi3_m), funs(mean,sd), na.rm = T)
-m0_distribution_m
+stargazer(as.data.frame(m0_distribution_m), summary = FALSE, digits = 2,
+          out = "desc_m0_distribution_m.html")
 
 m0_distribution_e3_loi_c <- dataPaper %>% 
   filter(duration >= 2) %>% 
@@ -92,7 +93,8 @@ m0_distribution_e3_loi_c <- dataPaper %>%
   group_by(party, e3_loi_c) %>% 
   summarize(Freq = n()) %>%
   mutate(per = Freq/sum(Freq))
-m0_distribution_e3_loi_c
+stargazer(as.data.frame(m0_distribution_e3_loi_c), summary = FALSE, digits = 2,
+          out = "desc_m0_distribution_e3_loi_c.html")
 
 m0_distribution_e3_class <- dataPaper %>% 
   filter(duration >= 2) %>% 
@@ -101,7 +103,8 @@ m0_distribution_e3_class <- dataPaper %>%
   group_by(party, e3_class) %>% 
   summarize(Freq = n()) %>%
   mutate(per = Freq/sum(Freq))
-m0_distribution_e3_class
+stargazer(as.data.frame(m0_distribution_e3_class), summary = FALSE, digits = 2,
+          out = "desc_m0_distribution_e3_class.html")
 
 #Mean duration and length of answers
 meanDurationLength <- dataPaper %>% 
@@ -113,7 +116,8 @@ meanDurationLength <- dataPaper %>%
             duration_q95 = quantile(duration, 0.95, na.rm = T),
             duration_sd = sd(duration, na.rm = T),
             duration_skew = moments::skewness(duration, na.rm = T))
-t(meanDurationLength)
+stargazer(as.data.frame(meanDurationLength), summary = FALSE, digits = 2,
+          out = "desc_meanDurationLength.html")
 
 meanTokenLength <- dataPaper %>% 
   filter(duration >= 2) %>% 
@@ -124,7 +128,8 @@ meanTokenLength <- dataPaper %>%
             NToken_q95 = quantile(NToken, 0.95, na.rm = T),
             NToken_sd = sd(NToken, na.rm = T),
             NToken_skew = moments::skewness(NToken, na.rm = T))
-t(meanTokenLength)
+stargazer(as.data.frame(meanDurationLength), summary = FALSE, digits = 2,
+          out = "desc_meanDurationLength.html")
 
 meanDurationLengthLog <- dataPaper %>% 
   filter(duration >= 2) %>% 
@@ -135,7 +140,8 @@ meanDurationLengthLog <- dataPaper %>%
             duration_q95 = quantile(log1p(duration), 0.95, na.rm = T),
             duration_sd = sd(log1p(duration), na.rm = T),
             duration_skew = moments::skewness(log1p(duration), na.rm = T))
-t(meanDurationLengthLog)
+stargazer(as.data.frame(meanDurationLengthLog), summary = FALSE, digits = 2,
+          out = "desc_meanDurationLengthLog.html")
 
 meanTokenLengthLog <- dataPaper %>% 
   filter(duration >= 2) %>% 
@@ -146,7 +152,8 @@ meanTokenLengthLog <- dataPaper %>%
             NToken_q95 = quantile(log1p(NToken), 0.95, na.rm = T),
             NToken_sd = sd(log1p(NToken), na.rm = T),
             NToken_skew = moments::skewness(log1p(NToken), na.rm = T))
-t(meanTokenLengthLog)
+stargazer(as.data.frame(meanTokenLengthLog), summary = FALSE, digits = 2,
+          out = "desc_meanTokenLengthLog.html")
 
 N_question <- dataPaper %>% 
   filter(duration >= 2) %>% 
