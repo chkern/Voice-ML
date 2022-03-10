@@ -172,7 +172,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p1_loi1-words.pdf", width = 9, height = 6)
+ggsave("p1_loi1-words.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -184,7 +184,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p2_loi2-words.pdf", width = 9, height = 6)
+ggsave("p2_loi2-words.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -196,7 +196,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p3_loi3-words.pdf", width = 9, height = 6)
+ggsave("p3_loi3-words.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -208,7 +208,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p4_loi1-duration.pdf", width = 9, height = 6)
+ggsave("p4_loi1-duration.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -220,7 +220,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p5_loi2-duration.pdf", width = 9, height = 6)
+ggsave("p5_loi2-duration.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -232,7 +232,7 @@ dataPaper %>%
   theme(panel.spacing.x = unit(4, "mm"),
         text = element_text(size = 14))
 
-ggsave("p6_loi3-duration.pdf", width = 9, height = 6)
+ggsave("p6_loi3-duration.png", width = 9, height = 6)
 
 dataPaper %>%
   filter(duration >= 2) %>%
@@ -271,7 +271,7 @@ plot_model(m1b_validity, type = "pred", terms = c("e3_loi1_mm", "e3_loi1_mv [0, 
            title = "", legend.title = "Variance of\nPred. prob.:\nLow Interest", axis.lim = c(2.25, 5.25),
            axis.title = c("Predicted probability: Low Interest", "Survey Interest")) +
   theme_grey(base_size = 14)
-ggsave("pv_loi1-interest.pdf", width = 9, height = 6)
+ggsave("pv_loi1-interest.png", width = 9, height = 6)
 
 m2a_validity <- lm(surveyinterest ~ e3_loi3_mm + e3_loi3_mv, data = dataResp)
 m2b_validity <- lm(surveyinterest ~ e3_loi3_mm*e3_loi3_mv, data = dataResp)
@@ -285,7 +285,7 @@ plot_model(m2b_validity, type = "pred", terms = c("e3_loi3_mm", "e3_loi3_mv"),
            title = "", legend.title = "Variance of\nPred. prob.:\nHigh Interest", axis.lim = c(2.25, 5.25),
            axis.title = c("Predicted probability: High Interest", "Survey Interest")) +
   theme_grey(base_size = 14)
-ggsave("pv_loi3-interest.pdf", width = 9, height = 6)
+ggsave("pv_loi3-interest.png", width = 9, height = 6)
 
 m3a_validity <- lm(surveyinterest ~ e3_loi_cm, data = dataResp)
 m3b_validity <- lm(surveyinterest ~ e3_loi_cm + NToken_m, data = dataResp)
