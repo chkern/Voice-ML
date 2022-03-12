@@ -6,6 +6,7 @@ library(sjPlot)
 library(lme4)
 library(lmerTest)
 library(mitml)
+library(ordinal)
 
 ###Regression analysis
 
@@ -65,6 +66,8 @@ dataResp <- dataPaper %>%
             NToken_m = mean(NToken, na.rm = T),
             duration_m = mean(duration, na.rm = T),
             surveyinterest = max(surveyInterest),
+            surveyint = as.factor(surveyinterest),
+            surveyint = fct_relevel(surveyint, "0", "1", "2", "3", "4", "5", "6"),
             age = max(age),
             education = names(which.max(table(education))), 
             motherTongueGerman = max(motherTongueGerman))
@@ -259,30 +262,28 @@ dataPaper %>%
 m0t_validity <- lm(surveyinterest ~ NToken_m, data = dataResp)
 m0d_validity <- lm(surveyinterest ~ duration_m, data = dataResp)
 
-m1a_validity <- lm(surveyinterest ~ e3_loi1_mm + e3_loi1_mv, data = dataResp)
-m1b_validity <- lm(surveyinterest ~ e3_loi1_mm*e3_loi1_mv, data = dataResp)
-m1c_validity <- lm(surveyinterest ~ e3_loi1_mm*e3_loi1_mv + age + education + motherTongueGerman, data = dataResp)
-stargazer(m1b_validity, m1c_validity, report = ('vcsp'),
+m1a_validity <- clm(surveyint ~ e3_loi1_mm + e3_loi1_mv, link = "probit", data = dataResp)
+m1b_validity <- clm(surveyint ~ e3_loi1_mm*e3_loi1_mv, link = "probit", data = dataResp)
+m1c_validity <- clm(surveyint ~ e3_loi1_mm*e3_loi1_mv + age + education + motherTongueGerman, link = "probit", data = dataResp)
+stargazer(m1a_validity, m1b_validity, report = ('vcsp'),
           keep = c("Constant", "e3_loi1_mm", "e3_loi1_mv", "e3_loi1_mm:e3_loi1_mv"),
-          add.lines = list(c("Demographic controls", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_svyinterestloi1.html")
 
-plot_model(m1b_validity, type = "pred", terms = c("e3_loi1_mm", "e3_loi1_mv [0, 0.01, 0.02]"),
-           title = "", legend.title = "Variance of\nPred. prob.:\nLow Interest", axis.lim = c(2.25, 5.25),
+plot_model(m1c_validity, type = "pred", terms = c("e3_loi1_mm [all]", "e3_loi1_mv"),
+           title = "", legend.title = "Variance of\nPred. prob.:\nLow Interest",
            axis.title = c("Predicted probability: Low Interest", "Survey Interest")) +
   theme_grey(base_size = 14)
 ggsave("pv_loi1-interest.png", width = 9, height = 6)
 
-m2a_validity <- lm(surveyinterest ~ e3_loi3_mm + e3_loi3_mv, data = dataResp)
-m2b_validity <- lm(surveyinterest ~ e3_loi3_mm*e3_loi3_mv, data = dataResp)
-m2c_validity <- lm(surveyinterest ~ e3_loi3_mm*e3_loi3_mv + age + education + motherTongueGerman, data = dataResp)
-stargazer(m2b_validity, m2c_validity, report = ('vcsp'),
+m2a_validity <- clm(surveyint ~ e3_loi3_mm + e3_loi3_mv, link = "probit", data = dataResp)
+m2b_validity <- clm(surveyint ~ e3_loi3_mm*e3_loi3_mv, link = "probit", data = dataResp)
+m2c_validity <- clm(surveyint ~ e3_loi3_mm*e3_loi3_mv + age + education + motherTongueGerman, link = "probit", data = dataResp)
+stargazer(m2a_validity, m2b_validity, report = ('vcsp'),
           keep = c("Constant", "e3_loi3_mm", "e3_loi3_mv", "e3_loi3_mm:e3_loi3_mv"),
-          add.lines = list(c("Demographic controls", "", "X")),
           omit.table.layout = "n", align = TRUE, no.space = TRUE, out.header = T, out = "models_svyinterestloi3.html")
 
-plot_model(m2b_validity, type = "pred", terms = c("e3_loi3_mm", "e3_loi3_mv"),
-           title = "", legend.title = "Variance of\nPred. prob.:\nHigh Interest", axis.lim = c(2.25, 5.25),
+plot_model(m2c_validity, type = "pred", terms = c("e3_loi3_mm [all]", "e3_loi3_mv"),
+           title = "", legend.title = "Variance of\nPred. prob.:\nHigh Interest",
            axis.title = c("Predicted probability: High Interest", "Survey Interest")) +
   theme_grey(base_size = 14)
 ggsave("pv_loi3-interest.png", width = 9, height = 6)
