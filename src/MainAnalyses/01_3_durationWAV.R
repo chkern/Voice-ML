@@ -1,6 +1,13 @@
-### Author: Konstantin Gavras
 
 #Get duration of .wav files
+
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(quanteda)
+library(psych)
+library(sjPlot)
+library(tuneR)
 
 wavFiles <- list.files("E:/final")
 wavFiles <- wavFiles[wavFiles != "data"]

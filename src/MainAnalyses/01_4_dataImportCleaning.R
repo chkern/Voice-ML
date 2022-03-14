@@ -1,6 +1,13 @@
-### Author: Konstantin Gavras
 
-#01_dataImportCleaning
+#Data Import Cleaning
+
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(quanteda)
+library(psych)
+library(sjPlot)
+library(tuneR)
 
 afd15 <- readRDS("C:/Users/kgavras/Google Drive/Sound of Respondents/voice_q1_afd_15s.rds")
 afd16 <- readRDS("C:/Users/kgavras/Google Drive/Sound of Respondents/voice_q1_afd_16s.rds")
@@ -121,3 +128,5 @@ survey_c <- survey_c %>%
                                normal = "e3_loi2_m",
                                high_interest = "e3_loi3_m"),
          no_voice = ifelse(is.na(e1_class), 1, 0))
+
+save(survey_c, file = "voiceData.Rdata")

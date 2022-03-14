@@ -1,4 +1,3 @@
-### Author: Konstantin Gavras
 
 ###Regression analysis
 

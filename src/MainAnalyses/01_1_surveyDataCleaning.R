@@ -1,4 +1,13 @@
-### Author: Konstantin Gavras
+
+#Survey Data Cleaning
+
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(quanteda)
+library(psych)
+library(sjPlot)
+library(tuneR)
 
 load("E:/dataFull_ohnePara.RData")
 load("E:/dataFull_Para.RData")

@@ -1,4 +1,5 @@
-### Authors: Konstantin Gavras, Christoph Kern
+
+#Main analysis
 
 library(tidyverse)
 library(stargazer)
@@ -8,7 +9,7 @@ library(lmerTest)
 library(mitml)
 library(ordinal)
 
-###Regression analysis
+load("voiceData.RData")
 
 glimpse(survey_c)
 

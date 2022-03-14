@@ -1,6 +1,15 @@
-### Author: Konstantin Gavras
 
 #Get Sentiment Scores
+
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(quanteda)
+library(psych)
+library(sjPlot)
+library(tuneR)
+
+load("senti_ws.RData")
 
 dataSurvey <- dataSurvey %>% 
   mutate_at(.vars = c("CDUCSU_VoiceCondition",

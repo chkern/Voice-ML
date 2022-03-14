@@ -1,6 +1,5 @@
-### Author: Konstantin Gavras
 
-#03_factorAnalysis.R
+#03_factorAnalysis
 
 surveyFactor <- survey_c %>% 
   drop_na() %>% 

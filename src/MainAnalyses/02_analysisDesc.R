@@ -1,10 +1,16 @@
-### Author: Konstantin Gavras
 
-#02_analysis
+#Descriptive analysis
+
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(quanteda)
+library(psych)
+library(sjPlot)
+library(tuneR)
+library(stargazer)
 
 glimpse(survey_c)
-
-
 
 #Descriptives
 
