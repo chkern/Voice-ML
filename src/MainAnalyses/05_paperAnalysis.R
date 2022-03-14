@@ -15,6 +15,7 @@ glimpse(survey_c)
 # Data prep
 dataPaper <- survey_c %>% 
   mutate(party = as.factor(party),
+         party = fct_relevel(party, "CDU", "SPD", "Greens", "AfD"),
          partyPreference = as.factor(partyPreference),
          partyPreference = fct_recode(partyPreference, Others = "FDP", Others = "Linke", Others = "NA"),
          partyPreference = relevel(partyPreference, ref = "Others"),
